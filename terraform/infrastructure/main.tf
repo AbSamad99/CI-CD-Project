@@ -6,6 +6,7 @@ terraform {
     }
   }
 
+  # Need to figure out if it is possible to pass these in as variables
   backend "s3" {
     bucket         = "syed-cicd-state"
     key            = "infrastructure/terraform.tfstate"
@@ -16,11 +17,11 @@ terraform {
 }
 
 provider "aws" {
-  region = "ca-central-1"
+  region = var.preferred_region
 }
 
 resource "aws_instance" "apache_server" {
-  ami             = "ami-00aa5a38fb6567e70"
+  ami             = var.machine_ami
   instance_type   = "t2.micro"
   security_groups = [aws_security_group.apache_security_group.name]
   key_name        = "terraform-key"
@@ -30,7 +31,6 @@ resource "aws_security_group" "apache_security_group" {
   name = "apache-security-group"
 }
 
-
 resource "aws_security_group_rule" "allow_ssh_ingress" {
   security_group_id = aws_security_group.apache_security_group.id
 
@@ -38,7 +38,17 @@ resource "aws_security_group_rule" "allow_ssh_ingress" {
   from_port   = 22
   to_port     = 22
   protocol    = "tcp"
-  cidr_blocks = ["172.110.70.156/32"]
+  cidr_blocks = [var.whitelist_ip]
+}
+
+resource "aws_security_group_rule" "allow_http_ingress" {
+  security_group_id = aws_security_group.apache_security_group.id
+
+  type        = "ingress"
+  from_port   = 80
+  to_port     = 80
+  protocol    = "tcp"
+  cidr_blocks = [var.whitelist_ip]
 }
 
 resource "aws_security_group_rule" "allow_all_egress" {
@@ -49,8 +59,4 @@ resource "aws_security_group_rule" "allow_all_egress" {
   to_port     = 0
   protocol    = -1
   cidr_blocks = ["0.0.0.0/0"]
-}
-
-output "machine_ip" {
-  value = aws_instance.apache_server.public_ip
 }
