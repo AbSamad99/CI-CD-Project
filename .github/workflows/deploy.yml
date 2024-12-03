@@ -1,4 +1,4 @@
-name: Deploy infrastructure on tag release
+name: Deploy the infrastructure
 
 on: workflow_dispatch
 
@@ -9,6 +9,7 @@ jobs:
     env:
       AWS_ACCESS_KEY_ID: ${{secrets.AWS_ACCESS_KEY_ID}}
       AWS_SECRET_ACCESS_KEY: ${{secrets.AWS_SECRET_ACCESS_KEY}}
+      ANSIBLE_HOST_KEY_CHECKING: False
 
     steps:
       - name: Checkout Code
@@ -24,3 +25,29 @@ jobs:
 
       - name: Apply Terraform
         run: terraform -chdir=terraform/infrastructure apply --auto-approve --var="whitelist_ip=${{vars.WHITELIST_IP}}"
+
+      - name: Fetch machine IP
+        run: |
+          terraform -chdir=terraform/infrastructure output -json machine_ip | grep -v "^\[command\]" > machine_ip.json
+          tr -d '"' < machine_ip.json > machine_ip.txt
+
+      - name: Set the private key for the provisioned machine
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.RSA_SECRET_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+
+      - name: Create the inventory file
+        run: |
+          echo "[provisioned_machine]" > ansible/inventory.ini
+          echo "$(cat machine_ip.txt)" >> ansible/inventory.ini
+          cat ansible/inventory.ini
+
+      - name: Install Ansible
+        run: sudo apt-get update && sudo apt-get install -y ansible
+
+      - name: Run ansible playbooks
+        working-directory: ansible
+        run: |
+          ansible-playbook install_docker.yml
+          ansible-playbook run_apache.yml
