@@ -1,6 +1,7 @@
 package com.example.auth.service;
 
 import com.example.auth.dto.BaseResponse;
+import com.example.auth.dto.LoginResponse;
 import com.example.auth.dto.TokenResponse;
 import com.example.auth.dto.TokenValidResponse;
 import com.example.auth.model.User;
@@ -10,6 +11,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -21,6 +24,9 @@ public class UserService {
 
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
+
+    @Autowired
+    private JwtService jwtService;
 
     // Signup a new user
     public BaseResponse signup(String email, String password) {
@@ -54,9 +60,15 @@ public class UserService {
             throw new IllegalArgumentException("Invalid email or password");
         }
 
+        // JWT claims map
+        Map<String, Object> jwtMap = new HashMap<>();
+        jwtMap.put("email", email);
+        String jwtToken = jwtService.generateToken(jwtMap);
+
         // Response
-        BaseResponse response = new BaseResponse();
+        LoginResponse response = new LoginResponse();
         response.setMessage("User logged in successfully.");
+        response.setToken(jwtToken);
 
         return response;
     }
