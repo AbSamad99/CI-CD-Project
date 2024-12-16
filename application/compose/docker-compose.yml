@@ -28,5 +28,20 @@ services:
     depends_on:
       - postgres
 
+  poll_service:
+    image: abdsyed/ci-cd-poll-microservice:latest
+    container_name: poll_service
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_NAME=${DB_NAME}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+    depends_on:
+      - postgres
+
 volumes:
   postgres_data:
