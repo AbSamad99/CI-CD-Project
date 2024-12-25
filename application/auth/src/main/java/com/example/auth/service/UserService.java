@@ -62,6 +62,7 @@ public class UserService {
 
         // JWT claims map
         Map<String, Object> jwtMap = new HashMap<>();
+        jwtMap.put("id", user.getId());
         jwtMap.put("email", email);
         String jwtToken = jwtService.generateToken(jwtMap);
 
