@@ -2,9 +2,12 @@ const express = require("express");
 const app = express();
 require("dotenv").config();
 
-const { pool, createTables } = require("./db/db");
+const { createTables } = require("./db/db");
+const pollRoute = require("./route/poll");
 
 const port = process.env.PORT;
+
+app.use("/poll", pollRoute);
 
 app.get("/", (req, res) => {
   res.send("Hello World!");
