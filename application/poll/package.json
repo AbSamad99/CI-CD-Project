@@ -4,7 +4,7 @@
   "description": "Poll microservice",
   "main": "app.js",
   "scripts": {
-    "dev":"nodemon app.js",
+    "dev": "nodemon app.js",
     "start": "node app.js"
   },
   "author": "Abdussamad Syed",
@@ -12,6 +12,7 @@
   "dependencies": {
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
     "pg": "^8.13.1"
   },
   "devDependencies": {
