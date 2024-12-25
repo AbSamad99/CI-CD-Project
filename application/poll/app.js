@@ -7,6 +7,10 @@ const pollRoute = require("./route/poll");
 
 const port = process.env.PORT;
 
+// Middleware
+app.use(express.json());
+
+// Routes
 app.use("/poll", pollRoute);
 
 app.get("/", (req, res) => {

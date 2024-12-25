@@ -87,6 +87,7 @@ public class UserService {
 
         // Response
         TokenResponse response = new TokenResponse();
+        response.setMessage("Reset token generated successfully.");
         response.setMessage(token);
         response.setToken(token);
 
