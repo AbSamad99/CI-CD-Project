@@ -20,7 +20,7 @@ pollRoute.post("/create-poll", async (req, res) => {
       "SELECT id FROM users WHERE email = $1",
       [email]
     );
-    if (userResult.rows.length === 0) {
+    if (!userResult.rowCount) {
       return res.status(404).json({ message: "User not found." });
     }
     const userId = userResult.rows[0].id;
@@ -63,7 +63,7 @@ pollRoute.delete("/delete-poll/:id", async (req, res) => {
       "SELECT id FROM users WHERE email = $1",
       [email]
     );
-    if (userResult.rows.length === 0) {
+    if (!userResult.rowCount) {
       return res.status(404).json({ message: "User not found." });
     }
     const userId = userResult.rows[0].id;
@@ -72,7 +72,7 @@ pollRoute.delete("/delete-poll/:id", async (req, res) => {
       "SELECT creator_id FROM polls WHERE id = $1",
       [pollId]
     );
-    if (pollResult.rows.length === 0) {
+    if (!pollResult.rowCount) {
       return res.status(404).json({ message: "Poll not found." });
     }
     const creatorId = pollResult.rows[0].creator_id;
@@ -110,17 +110,30 @@ pollRoute.post("/vote/:id", async (req, res) => {
       "SELECT id FROM users WHERE email = $1",
       [email]
     );
-    if (userResult.rows.length === 0) {
+    if (!userResult.rowCount) {
       return res.status(404).json({ message: "User not found." });
     }
     const userId = userResult.rows[0].id;
+
+    // Check if poll is closed
+    const closedResult = await client.query(
+      "SELECT * FROM polls WHERE id = $1",
+      [pollId]
+    );
+    if (!closedResult.rowCount) {
+      return res.status(404).json({ message: "Poll does not exist." });
+    }
+    const closed = closedResult.rows[0];
+    if (Date.now() > closed.time_limit.getTime()) {
+      return res.status(401).json({ message: "Poll is closed." });
+    }
 
     // Check if the user has already voted
     const voteResult = await client.query(
       "SELECT * FROM votes WHERE user_id = $1 AND poll_id = $2",
       [userId, pollId]
     );
-    if (voteResult.rows.length > 0) {
+    if (voteResult.rowCount > 0) {
       return res.status(400).json({ message: "Vote already present." });
     }
 
@@ -128,6 +141,12 @@ pollRoute.post("/vote/:id", async (req, res) => {
     await client.query(
       "INSERT INTO votes (user_id, poll_id, option_id) VALUES ($1, $2, $3)",
       [userId, pollId, optionId]
+    );
+
+    // Increment vote count in poll_options table
+    await client.query(
+      "UPDATE poll_options SET votes = votes + 1 WHERE id = $1",
+      [optionId]
     );
 
     client.release();
@@ -153,17 +172,30 @@ pollRoute.put("/update-vote/:id", async (req, res) => {
       "SELECT id FROM users WHERE email = $1",
       [email]
     );
-    if (userResult.rows.length === 0) {
+    if (!userResult.rowCount) {
       return res.status(404).json({ message: "User not found." });
     }
     const userId = userResult.rows[0].id;
+
+    // Check if poll is closed
+    const closedResult = await client.query(
+      "SELECT * FROM polls WHERE id = $1",
+      [pollId]
+    );
+    if (!closedResult.rowCount) {
+      return res.status(404).json({ message: "Poll does not exist." });
+    }
+    const closed = closedResult.rows[0];
+    if (Date.now() > closed.time_limit.getTime()) {
+      return res.status(401).json({ message: "Poll is closed." });
+    }
 
     // Check if the user has already voted
     const voteResult = await client.query(
       "SELECT * FROM votes WHERE user_id = $1 AND poll_id = $2",
       [userId, pollId]
     );
-    if (voteResult.rows.length === 0) {
+    if (!voteResult.rowCount) {
       return res.status(404).json({ message: "No vote to update." });
     }
 
@@ -202,7 +234,7 @@ pollRoute.delete("/remove-vote/:id", async (req, res) => {
       "SELECT id FROM users WHERE email = $1",
       [email]
     );
-    if (userResult.rows.length === 0) {
+    if (!userResult.rowCount) {
       return res.status(404).json({ message: "User not found." });
     }
     const userId = userResult.rows[0].id;
@@ -212,7 +244,7 @@ pollRoute.delete("/remove-vote/:id", async (req, res) => {
       "SELECT * FROM votes WHERE user_id = $1 AND poll_id = $2",
       [userId, pollId]
     );
-    if (voteResult.rows.length === 0) {
+    if (!voteResult.rowCount) {
       return res.status(404).json({ message: "No vote to remove." });
     }
 
@@ -220,6 +252,12 @@ pollRoute.delete("/remove-vote/:id", async (req, res) => {
     await client.query(
       "DELETE FROM votes WHERE user_id = $1 AND poll_id = $2",
       [userId, pollId]
+    );
+
+    // Increment vote count in poll_options table
+    await client.query(
+      "UPDATE poll_options SET votes = votes - 1 WHERE id = $1",
+      [optionId]
     );
 
     client.release();
