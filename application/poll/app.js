@@ -22,5 +22,5 @@ app.listen(port, async () => {
     console.log("Error connecting to database!! Exiting process.");
     process.exit(1);
   }
-  console.log(`Example app listening on port ${port}`);
+  console.log(`Poll app listening on port ${port}`);
 });
