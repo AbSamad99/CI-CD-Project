@@ -1,0 +1,32 @@
+- name: Deploy application and run Docker Compose
+  hosts: provisioned_machine
+  become: yes
+  tasks:
+    - name: Clone the GitHub repository
+      git:
+        repo: https://github.com/AbSamad99/CI-CD-Project.git
+        dest: /opt/CI-CD-Project
+        update: yes
+
+    - name: Verify Docker Compose installation
+      command: docker-compose --version
+      register: compose_version
+      changed_when: false
+      failed_when: "'Docker Compose' not in compose_version.stdout"
+
+    - name: Create the .env file for Docker Compose
+      copy:
+        dest: /opt/CI-CD-Project/application/compose/.env
+        content: |
+          DB_HOST={{ lookup('env', 'DB_HOST') }}
+          DB_PORT={{ lookup('env', 'DB_PORT') }}
+          DB_NAME={{ lookup('env', 'DB_NAME') }}
+          DB_USERNAME={{ lookup('env', 'DB_USERNAME') }}
+          DB_PASSWORD={{ lookup('env', 'DB_PASSWORD') }}
+          JWT_PRIVATE_KEY={{ lookup('env', 'JWT_PRIVATE_KEY') }}
+          JWT_PUBLIC_KEY={{ lookup('env', 'JWT_PUBLIC_KEY') }}
+
+    - name: Run Docker Compose
+      community.docker.docker_compose:
+        project_src: /opt/CI-CD-Project/application/compose
+        state: present

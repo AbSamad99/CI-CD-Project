@@ -1,6 +1,12 @@
-- hosts: provisioned_machine
+- name: Install all the necessary modules.
+  hosts: provisioned_machine
   become: yes
   tasks:
+    - name: Install Git
+      apt:
+        name: git
+        state: present
+
     - name: Install Docker
       apt:
         name: docker.io
@@ -21,3 +27,9 @@
     - name: Install Docker SDK for Python
       pip:
         name: docker
+
+    - name: Ensure Docker Compose is installed
+      get_url:
+        url: https://github.com/docker/compose/releases/download/v2.27.0/docker-compose-`uname -s`-`uname -m`
+        dest: /usr/local/bin/docker-compose
+        mode: "0755"
