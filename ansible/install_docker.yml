@@ -2,34 +2,68 @@
   hosts: provisioned_machine
   become: yes
   tasks:
-    - name: Install Git
+    - name: Update cache.
       apt:
-        name: git
-        state: present
-
-    - name: Install Docker
-      apt:
-        name: docker.io
-        state: present
         update_cache: yes
 
-    - name: Start and enable Docker service
+    - name: Install necessary modules.
+      apt:
+        name:
+          - git
+          - curl
+          - ca-certificates
+        state: present
+
+    - name: Create /etc/apt/keyrings
+      file:
+        dest: /etc/apt/keyrings
+        mode: "0755"
+        state: directory
+
+    - name: Download GPG key.
+      get_url:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        dest: /etc/apt/keyrings/docker.asc
+        mode: "0644"
+        force: true
+
+    - name: Determine architecture and OS version codename.
+      shell: |
+        arch=$(dpkg --print-architecture)
+        codename=$(. /etc/os-release && echo "$VERSION_CODENAME")
+        echo "deb [arch=${arch} signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu ${codename} stable"
+      register: docker_repo
+
+    - name: Add Docker APT repository to sources list.
+      copy:
+        dest: /etc/apt/sources.list.d/docker.list
+        content: "{{ docker_repo.stdout }}"
+        mode: "0644"
+
+    - name: Install necessary docker packages.
+      apt:
+        update_cache: true
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-buildx-plugin
+          - docker-compose-plugin
+        state: present
+
+    - name: Ensure Docker is started and enabled.
       service:
         name: docker
         state: started
-        enabled: yes
+        enabled: true
 
     - name: Install pip (Python package manager)
       apt:
         name: python3-pip
         state: present
 
-    - name: Install Docker SDK for Python
+    - name: Install Docker and Compose SDK for Python
       pip:
-        name: docker
-
-    - name: Ensure Docker Compose is installed
-      get_url:
-        url: https://github.com/docker/compose/releases/download/v2.27.0/docker-compose-`uname -s`-`uname -m`
-        dest: /usr/local/bin/docker-compose
-        mode: "0755"
+        name:
+          - docker
+          - docker-compose

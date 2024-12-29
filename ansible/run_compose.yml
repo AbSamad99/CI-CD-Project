@@ -8,12 +8,6 @@
         dest: /opt/CI-CD-Project
         update: yes
 
-    - name: Verify Docker Compose installation
-      command: docker-compose --version
-      register: compose_version
-      changed_when: false
-      failed_when: "'Docker Compose' not in compose_version.stdout"
-
     - name: Create the .env file for Docker Compose
       copy:
         dest: /opt/CI-CD-Project/application/compose/.env
@@ -23,10 +17,11 @@
           DB_NAME={{ lookup('env', 'DB_NAME') }}
           DB_USERNAME={{ lookup('env', 'DB_USERNAME') }}
           DB_PASSWORD={{ lookup('env', 'DB_PASSWORD') }}
-          JWT_PRIVATE_KEY={{ lookup('env', 'JWT_PRIVATE_KEY') }}
-          JWT_PUBLIC_KEY={{ lookup('env', 'JWT_PUBLIC_KEY') }}
+          JWT_PRIVATE_KEY="{{ lookup('env', 'JWT_PRIVATE_KEY') }}"
+          JWT_PUBLIC_KEY="{{ lookup('env', 'JWT_PUBLIC_KEY') }}"
 
     - name: Run Docker Compose
-      community.docker.docker_compose:
+      community.docker.docker_compose_v2:
         project_src: /opt/CI-CD-Project/application/compose
         state: present
+        pull: always
