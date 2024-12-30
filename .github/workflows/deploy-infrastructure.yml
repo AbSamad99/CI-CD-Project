@@ -1,0 +1,42 @@
+name: Deploy the infrastructure
+
+on: workflow_dispatch
+
+jobs:
+  deploy-infrastructure:
+    runs-on: ubuntu-22.04
+
+    env:
+      AWS_ACCESS_KEY_ID: ${{secrets.AWS_ACCESS_KEY_ID}}
+      AWS_SECRET_ACCESS_KEY: ${{secrets.AWS_SECRET_ACCESS_KEY}}
+      ANSIBLE_HOST_KEY_CHECKING: False
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Initialize Terraform
+        uses: ./.github/actions/initialize-terraform
+        with:
+          terraform_directory: terraform/infrastructure
+          terraform_version: 1.5.0
+
+      - name: Apply Terraform
+        run: terraform -chdir=terraform/infrastructure apply --auto-approve --var="whitelist_ip=${{vars.WHITELIST_IP}}"
+
+      - name: Set inventory file and private key.
+        uses: ./.github/actions/set-inventory-and-key
+        with:
+          secret_key: ${{secrets.RSA_SECRET_KEY}}
+
+      - name: Install Ansible
+        run: |
+          sudo apt-get update
+          sudo apt install software-properties-common
+          sudo add-apt-repository --yes --update ppa:ansible/ansible 
+          sudo apt-get install -y ansible
+
+      - name: Configure provisioned machine with required software modules.
+        working-directory: ansible
+        run: |
+          ansible-playbook install_docker.yml

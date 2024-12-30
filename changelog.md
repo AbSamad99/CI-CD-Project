@@ -1,5 +1,10 @@
 ## Changelog
 
+### 30/12/24
+
+- Adding reusable composite actions initialize-terraform and set-inventory-and-key to use across different workflows.
+- Adding separate workflow to bring up docker compose on provisioned machine.
+
 ### 29/12/24
 
 - Updating the changelog file.

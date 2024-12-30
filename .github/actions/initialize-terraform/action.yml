@@ -1,0 +1,21 @@
+name: Initialize terraform
+description: Composite action to initialize terraform
+inputs:
+  terraform_directory:
+    description: Path to the terraform directory.
+    required: true
+  terraform_version:
+    description: Terraform version to install
+    required: true
+    default: 1.5.0
+runs:
+  using: composite
+  steps:
+    - name: Setup terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: 1.5.0
+
+    - name: Initialize terraform
+      shell: bash
+      run: terraform -chdir=${{inputs.terraform_directory}} init
