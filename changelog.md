@@ -4,6 +4,7 @@
 
 - Adding reusable composite actions initialize-terraform and set-inventory-and-key to use across different workflows.
 - Adding separate workflow to bring up docker compose on provisioned machine.
+- Updating destroy workflow to use the terraform init composite action.
 
 ### 29/12/24
 
