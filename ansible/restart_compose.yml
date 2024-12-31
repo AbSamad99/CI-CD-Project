@@ -1,0 +1,14 @@
+- name: Restart Docker Compose
+  hosts: provisioned_machine
+  become: yes
+  tasks:
+    - name: Stop Docker Compose
+      community.docker.docker_compose_v2:
+        project_src: /opt/CI-CD-Project/application/compose
+        state: stopped
+
+    - name: Start Docker Compose
+      community.docker.docker_compose_v2:
+        project_src: /opt/CI-CD-Project/application/compose
+        state: present
+        pull: always

@@ -23,3 +23,11 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
           working_directory: application/auth
           image_name: abdsyed/ci-cd-auth-microservice
+
+  restart-compose:
+    needs: publish-auth
+    secrets:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      RSA_SECRET_KEY: ${{ secrets.RSA_SECRET_KEY }}
+    uses: ./.github/workflows/restart-compose.yml
