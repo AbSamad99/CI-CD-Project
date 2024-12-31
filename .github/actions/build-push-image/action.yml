@@ -1,0 +1,38 @@
+name: Build and push microservice image
+description: Build and push microservice image
+inputs:
+  username:
+    description: DockerHub username.
+    required: true
+  password:
+    description: DockerHub private token.
+    required: true
+  working_directory:
+    description: Path where the Dockerfile is located.
+    required: true
+  image_name:
+    description: Name of the image to be built.
+    required: true
+  image_tag:
+    description: Tag of the imaged pushed to DockerHub.
+    default: latest
+runs:
+  using: composite
+  steps:
+    - name: Docker login
+      uses: docker/login-action@v3
+      with:
+        username: ${{inputs.username}}
+        password: ${{inputs.password}}
+
+    - name: Build docker image
+      shell: bash
+      working-directory: ${{inputs.working_directory}}
+      run: |
+        docker build -t ${{inputs.image_name}}:${{inputs.image_tag}} .
+
+    - name: Push image to docker hub
+      shell: bash
+      working-directory: ${{inputs.working_directory}}
+      run: |
+        docker push ${{inputs.image_name}}:${{inputs.image_tag}}

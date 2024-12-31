@@ -1,5 +1,10 @@
 ## Changelog
 
+### 31/12/24
+
+- Adding composite action build-push-image to build and push docker images to repo.
+- Using the new composite action in publish-auth and publish-poll.
+
 ### 30/12/24
 
 - Adding reusable composite actions initialize-terraform and set-inventory-and-key to use across different workflows.
