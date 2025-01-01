@@ -1,9 +1,14 @@
 ## Changelog
 
+### 01/01/25
+
+- Creating reusable composite action setup-ansible to use in deploy-compose and restart-compose.
+
 ### 31/12/24
 
 - Adding composite action build-push-image to build and push docker images to repo.
 - Using the new composite action in publish-auth and publish-poll.
+- Adding playbook and workflow to restart docker compose. Using the workflow in publish-auth and publish-poll.
 
 ### 30/12/24
 

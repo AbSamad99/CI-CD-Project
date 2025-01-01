@@ -1,0 +1,27 @@
+name: Setup Ansible
+description: Setup Ansible
+inputs:
+  rsa_secret_key:
+    description: Secret key needed to connect to provisioned machine
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Initialize Terraform
+      uses: ./.github/actions/initialize-terraform
+      with:
+        terraform_directory: terraform/infrastructure
+        terraform_version: 1.5.0
+
+    - name: Set inventory file and private key.
+      uses: ./.github/actions/set-inventory-and-key
+      with:
+        secret_key: ${{inputs.rsa_secret_key}}
+
+    - name: Install Ansible
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt install software-properties-common
+        sudo add-apt-repository --yes --update ppa:ansible/ansible 
+        sudo apt-get install -y ansible

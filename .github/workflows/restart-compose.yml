@@ -24,23 +24,10 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Initialize Terraform
-        uses: ./.github/actions/initialize-terraform
+      - name: Setup Ansible
+        uses: ./.github/actions/setup-ansible
         with:
-          terraform_directory: terraform/infrastructure
-          terraform_version: 1.5.0
-
-      - name: Set inventory file and private key.
-        uses: ./.github/actions/set-inventory-and-key
-        with:
-          secret_key: ${{secrets.RSA_SECRET_KEY}}
-
-      - name: Install Ansible
-        run: |
-          sudo apt-get update
-          sudo apt install software-properties-common
-          sudo add-apt-repository --yes --update ppa:ansible/ansible 
-          sudo apt-get install -y ansible
+          rsa_secret_key: ${{secrets.RSA_SECRET_KEY}}
 
       - name: Bring up docker compose
         working-directory: ansible
